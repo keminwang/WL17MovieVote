@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎬 精彩影片人氣大票選</title>
+    <style>
+        :root {
+            --primary-color: #e50914;
+            --primary-hover: #b80710;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, "Microsoft JhengHei";
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            margin-top: 20px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            color: #111;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        /* 影片卡片容器 */
+        .video-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            width: 100%;
+            max-width: 1200px;
+            padding: 0 20px;
+        }
+
+        /* 卡片本體 */
+        .video-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .video-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.12);
+        }
+
+        /* 影片編號標籤 */
+        .video-id-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0, 0, 0, 0.75);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        /* 影片內嵌容器 (保持 16:9) */
+        .video-iframe-wrapper {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+            background: #000;
+        }
+
+        .video-iframe-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        /* 卡片文字內容 */
+        .video-info {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .video-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #222;
+            line-height: 1.4;
+        }
+
+        .video-description {
+            font-size: 0.95rem;
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        /* 投票區塊 */
+        .vote-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+
+        .vote-count {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #444;
+        }
+
+        .vote-count span {
+            color: var(--primary-color);
+            font-size: 1.3rem;
+        }
+
+        .vote-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .vote-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .vote-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* 響應式微調 */
+        @media (max-width: 600px) {
+            header h1 { font-size: 2rem; }
+            .video-container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🎬 年度熱門影片票選</h1>
+        <p>欣賞完下方的精彩影片後，投下您心目中最喜歡的一票吧！</p>
+    </header>
+
+    <div class="video-container" id="videoContainer"></div>
+
+    <script>
+        // 1. 影片資料庫 (可在這裡自由新增、修改影片內容)
+        // 註：YouTube 連結需使用 /embed/ 格式才能在網頁內嵌播放
+        const videoData = [
+            {
+                id: "V001",
+                title: "十七",
+                description: "致十七屆武陵家長讀書會工作團隊及十七位夥伴MV．感謝有你們同行～",
+                embedUrl: "https://www.youtube.com/embed/aaXmjmJuIzs", 
+                votes: 0
+            },
+            {
+                id: "V002",
+                title: "公關＆藝文組棒球組聚Part1",
+                description: "20260425公關組與藝文組聯合舉辦: 桃園棒球場導覽及球賽。",
+                embedUrl: "https://youtube.com/embed/y5OudBBXEcw",
+                votes: 0
+            },
+            {
+                id: "V003",
+                title: "公關＆藝文組棒球組聚Part2",
+                description: "20260425公關組與藝文組聯合舉辦: 桃園棒球場導覽及球賽。",
+                embedUrl: "https://youtube.com/embed/pKhwWVbu5Qw",
+                votes: 0
+            }
+        ];
+
+        // 2. 渲染網頁畫面的函式
+        function renderVideos() {
+            const container = document.getElementById('videoContainer');
+            container.innerHTML = ''; // 清空容器
+
+            videoData.forEach((video, index) => {
+                const card = document.createElement('div');
+                card.className = 'video-card';
+                
+                card.innerHTML = `
+                    <div class="video-id-badge">編號: ${video.id}</div>
+                    
+                    <div class="video-iframe-wrapper">
+                        <iframe src="${video.embedUrl}" allowfullscreen></iframe>
+                    </div>
+                    
+                    <div class="video-info">
+                        <div>
+                            <div class="video-title">${video.title}</div>
+                            <div class="video-description">${video.description}</div>
+                        </div>
+                        
+                        <div class="vote-section">
+                            <div class="vote-count">
+                                票數：<span id="count-${index}">${video.votes}</span> 票
+                            </div>
+                            <button class="vote-btn" onclick="castVote(${index})">
+                                👍 投票
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 3. 投票功能函式
+        function castVote(index) {
+            // 票數加 1
+            videoData[index].votes++;
+            
+            // 即時更新前端畫面上的數字
+            const countSpan = document.getElementById(`count-${index}`);
+            countSpan.innerText = videoData[index].votes;
+
+            // 增加點擊按鈕後的驚喜小回饋 (可選)
+            // alert(`感謝投票給「${videoData[index].title}」！`);
+        }
+
+        // 4. 網頁載入完成後立刻執行渲染
+        window.onload = renderVideos;
+    </script>
+</body>
+</html>
