@@ -187,7 +187,7 @@
 <body>
 
     <header>
-        <h1>🎬 2026晶馬獎年度熱門影片票選</h1>
+        <h1>🎬 年度熱門影片票選</h1>
         <p>欣賞完下方的精彩影片後，投下您心目中最喜歡的一票吧！（全網即時同步）</p>
     </header>
 
@@ -201,17 +201,16 @@
         // ==========================================
         // ⚠️ 請在此處填入您在 Firebase 控制台取得的專案配置資訊
         // ==========================================
-        // 修改後的配置資訊，改為讀取注入的環境變數
-		const firebaseConfig = {
-    		apiKey: process.env.FIREBASE_API_KEY,
-    		authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-    		databaseURL: process.env.FIREBASE_DATABASE_URL,
-    		projectId: process.env.FIREBASE_PROJECT_ID,
-    		storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-    		messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
-    		appId: process.env.FIREBASE_APP_ID,
-    		measurementId: process.env.FIREBASE_MEASUREMENT_ID
-}		;
+        const firebaseConfig = {
+  			apiKey: "AIzaSyACpPhKBjb70Ot-fm-xNrL5LHLFYUwGlp0",
+  			authDomain: "wl17movievote.firebaseapp.com",
+			databaseURL: "https://wl17movievote-default-rtdb.firebaseio.com/",
+  			projectId: "wl17movievote",
+  			storageBucket: "wl17movievote.firebasestorage.app",
+  			messagingSenderId: "568749774739",
+  			appId: "1:568749774739:web:e4b9ea804a967fda8efa66",
+  			measurementId: "G-28WNQ2D89L"
+        };
 
         // 初始化 Firebase 與 Database
         const app = initializeApp(firebaseConfig);
