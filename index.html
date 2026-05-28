@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎬 精彩影片人氣大票選</title>
+    <title>🎬 2026晶馬獎影片人氣大票選</title>
     <style>
         :root {
             --primary-color: #e50914;
@@ -171,6 +171,12 @@
             transform: scale(0.95);
         }
 
+        /* 投票按鈕停用樣式 (投過票後) */
+        .vote-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
         /* 響應式微調 */
         @media (max-width: 600px) {
             header h1 { font-size: 2rem; }
@@ -181,68 +187,87 @@
 <body>
 
     <header>
-        <h1>🎬 年度熱門影片票選</h1>
-        <p>欣賞完下方的精彩影片後，投下您心目中最喜歡的一票吧！</p>
+        <h1>🎬 2026晶馬獎年度熱門影片票選</h1>
+        <p>欣賞完下方的精彩影片後，投下您心目中最喜歡的一票吧！（全網即時同步）</p>
     </header>
 
     <div class="video-container" id="videoContainer"></div>
 
-    <script>
-        // 1. 影片資料庫 (可在這裡自由新增、修改影片內容)
-        // 註：YouTube 連結需使用 /embed/ 格式才能在網頁內嵌播放
+    <script type="module">
+        // 載入 Firebase 核心與實時資料庫模組 (使用穩定且快速的 cdn)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // ==========================================
+        // ⚠️ 請在此處填入您在 Firebase 控制台取得的專案配置資訊
+        // ==========================================
+        // 修改後的配置資訊，改為讀取注入的環境變數
+		const firebaseConfig = {
+    		apiKey: process.env.FIREBASE_API_KEY,
+    		authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+    		databaseURL: process.env.FIREBASE_DATABASE_URL,
+    		projectId: process.env.FIREBASE_PROJECT_ID,
+    		storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+    		messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+    		appId: process.env.FIREBASE_APP_ID,
+    		measurementId: process.env.FIREBASE_MEASUREMENT_ID
+}		;
+
+        // 初始化 Firebase 與 Database
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // 1. 影片原始靜態資料 (移除 votes: 0 改由雲端管理)
         const videoData = [
             {
                 id: "V001",
                 title: "十七",
                 description: "致十七屆武陵家長讀書會工作團隊及十七位夥伴MV．感謝有你們同行～",
-                embedUrl: "https://www.youtube.com/embed/p7KexWjhmz4", 
-                votes: 0
+                embedUrl: "https://www.youtube.com/embed/p7KexWjhmz4"
             },
             {
                 id: "V002",
                 title: "公關＆藝文組棒球組聚Part1",
                 description: "20260425公關組與藝文組聯合舉辦: 桃園棒球場導覽及球賽。",
-                embedUrl: "https://youtube.com/embed/y5OudBBXEcw",
-                votes: 0
+                embedUrl: "https://youtube.com/embed/y5OudBBXEcw"
             },
             {
                 id: "V003",
                 title: "公關＆藝文組棒球組聚Part2",
-                description: "20260425公關組與藝文組聯合舉辦: 桃園棒球場導覽及球賽。",
-                embedUrl: "https://youtube.com/embed/pKhwWVbu5Qw",
-                votes: 0
+                description: "20260425公關組與衛生組聯合舉辦: 桃園棒球場導覽及球賽。",
+                embedUrl: "https://youtube.com/embed/pKhwWVbu5Qw"
             },
 			{
                 id: "V004",
                 title: "16屆工作團隊",
                 description: "16屆工作團隊影片: 從工作夥伴變成朋友。",
-                embedUrl: "https://youtube.com/embed/vOxLZVT7__E",
-                votes: 0
+                embedUrl: "https://youtube.com/embed/vOxLZVT7__E"
             },
 			{
                 id: "V005",
                 title: "你眼中的風景，我眼中的你",
                 description: "致鏡頭後的補光者",
-                embedUrl: "https://youtube.com/embed/i9ZdTCmwYio",
-                votes: 0
+                embedUrl: "https://youtube.com/embed/i9ZdTCmwYio"
             },
 			{
                 id: "V006",
                 title: "WLM樂團:因為音樂，我們相遇",
-                description: "一群因讀書會而相遇的人，在人生不同階段重新擁抱音樂。我們用歌聲陪伴彼此，也將溫暖帶到更多地方。這是屬於 WLM 樂團一路走來的點點滴滴與珍貴回憶。",
-                embedUrl: "https://youtube.com/embed/h1JpARm5yvQ",
-                votes: 0
+                description: "一群因讀書會而相遇的人，在人生不同階段重新擁抱音樂。我們用歌聲陪伴彼此，也將溫暖帶到更多地方。這是屬於 WLM 樂團一路走來的點點滴滴與珍過回憶。",
+                embedUrl: "https://youtube.com/embed/h1JpARm5yvQ"
             }
         ];
 
-        // 2. 渲染網頁畫面的函式
+        // 2. 渲染網頁畫面的函式 (只執行一次，建立基本骨架)
         function renderVideos() {
             const container = document.getElementById('videoContainer');
-            container.innerHTML = ''; // 清空容器
+            container.innerHTML = ''; 
 
             videoData.forEach((video, index) => {
                 const card = document.createElement('div');
                 card.className = 'video-card';
+                
+                // 檢查此瀏覽器先前是否投過這支影片
+                const hasVoted = localStorage.getItem(`hasVoted_${video.id}`) === 'true';
                 
                 card.innerHTML = `
                     <div class="video-id-badge">編號: ${video.id}</div>
@@ -259,33 +284,68 @@
                         
                         <div class="vote-section">
                             <div class="vote-count">
-                                票數：<span id="count-${index}">${video.votes}</span> 票
+                                票數：<span id="count-${video.id}">--</span> 票
                             </div>
-                            <button class="vote-btn" onclick="castVote(${index})">
-                                👍 投票
+                            <button class="vote-btn" id="btn-${video.id}" ${hasVoted ? 'disabled' : ''}>
+                                ${hasVoted ? '✓ 已投票' : '👍 投票'}
                             </button>
                         </div>
                     </div>
                 `;
                 container.appendChild(card);
+
+                // 為按鈕綁定點擊事件
+                const button = card.querySelector(`#btn-${video.id}`);
+                button.addEventListener('click', () => castVote(video.id));
+
+                // 3. 【核心同步機制】動態監聽每一支影片在雲端資料庫的票數
+                // 資料庫儲存結構預期為：/video_votes/V001, /video_votes/V002 ...
+                const videoVoteRef = ref(db, `video_votes/${video.id}`);
+                onValue(videoVoteRef, (snapshot) => {
+                    const votes = snapshot.val() || 0; // 如果雲端還沒有資料，預設為 0
+                    const countSpan = document.getElementById(`count-${video.id}`);
+                    if (countSpan) {
+                        countSpan.innerText = votes;
+                    }
+                });
             });
         }
 
-        // 3. 投票功能函式
-        function castVote(index) {
-            // 票數加 1
-            videoData[index].votes++;
-            
-            // 即時更新前端畫面上的數字
-            const countSpan = document.getElementById(`count-${index}`);
-            countSpan.innerText = videoData[index].votes;
+        // 4. 投票功能函式 (透過雲端事務處理 runTransaction 確保計數不衝突)
+        function castVote(videoId) {
+            // 安全防線：再次驗證 LocalStorage
+            if (localStorage.getItem(`hasVoted_${videoId}`) === 'true') {
+                alert('您已經投過這支影片囉！');
+                return;
+            }
 
-            // 增加點擊按鈕後的驚喜小回饋 (可選)
-            // alert(`感謝投票給「${videoData[index].title}」！`);
+            const videoVoteRef = ref(db, `video_votes/${videoId}`);
+            const btn = document.getElementById(`btn-${videoId}`);
+            
+            // 點擊後立刻暫時禁用按鈕，避免連續狂點
+            btn.disabled = true;
+            btn.innerText = '傳送中...';
+
+            // 利用 Transaction 功能，確保多位使用者同時點擊時，雲端票數能正確累加
+            runTransaction(videoVoteRef, (currentVotes) => {
+                return (currentVotes || 0) + 1;
+            })
+            .then(() => {
+                // 雲端儲存成功，記錄在本地瀏覽器
+                localStorage.setItem(`hasVoted_${videoId}`, 'true');
+                btn.innerText = '✓ 已投票';
+                btn.disabled = true;
+            })
+            .catch((error) => {
+                console.error("投票發生錯誤: ", error);
+                alert("投票失敗，請檢查您的網路連線！");
+                btn.disabled = false;
+                btn.innerText = '👍 投票';
+            });
         }
 
-        // 4. 網頁載入完成後立刻執行渲染
-        window.onload = renderVideos;
+        // 5. 當網頁與 Firebase 資源載入完成後，執行初始渲染
+        renderVideos();
     </script>
 </body>
 </html>
