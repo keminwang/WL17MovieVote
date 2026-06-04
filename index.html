@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎬 2026晶馬獎年度熱門影片欣賞</title>
+    <style>
+        :root {
+            --primary-color: #e50914;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, "Microsoft JhengHei";
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            margin-top: 20px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            color: #111;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        /* 影片卡片容器 */
+        .video-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            width: 100%;
+            max-width: 1200px;
+            padding: 0 20px;
+        }
+
+        /* 卡片本體 */
+        .video-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .video-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.12);
+        }
+
+        /* 影片編號標籤 */
+        .video-id-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0, 0, 0, 0.75);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        /* 影片內嵌容器 (保持 16:9) */
+        .video-iframe-wrapper {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+            background: #000;
+        }
+
+        .video-iframe-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        /* 卡片文字內容 */
+        .video-info {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .video-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #222;
+            line-height: 1.4;
+        }
+
+        .video-description {
+            font-size: 0.95rem;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* 響應式微調 */
+        @media (max-width: 600px) {
+            header h1 { font-size: 2rem; }
+            .video-container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🎬 2026晶馬獎影片精選欣賞</h1>
+        <p>歡迎觀賞下方的精彩影片，一同回顧夥伴們的珍貴點滴！</p>
+    </header>
+
+    <div class="video-container" id="videoContainer"></div>
+
+    <script type="module">
+        // 1. 影片原始靜態資料
+        const videoData = [
+            {
+                id: "V001",
+                title: "十七",
+                description: "致十七屆武陵家長讀書會工作團隊及十七位夥伴MV．感謝有你們同行～",
+                embedUrl: "https://www.youtube.com/embed/p7KexWjhmz4"
+            },
+            {
+                id: "V002",
+                title: "公關＆藝文組棒球組聚Part1",
+                description: "20260425公關組與藝文組聯合舉辦: 桃園棒球場導覽及球賽。",
+                embedUrl: "https://www.youtube.com/embed/y5OudBBXEcw"
+            },
+            {
+                id: "V003",
+                title: "公關＆藝文組棒球組聚Part2",
+                description: "20260425公關組與衛生組聯合舉辦: 桃園棒球場導覽及球賽。",
+                embedUrl: "https://www.youtube.com/embed/pKhwWVbu5Qw"
+            },
+			{
+                id: "V004",
+                title: "16屆工作團隊",
+                description: "16屆工作團隊影片: 從工作夥伴變成朋友。",
+                embedUrl: "https://www.youtube.com/embed/vOxLZVT7__E"
+            },
+			{
+                id: "V005",
+                title: "你眼中的風景，我眼中的你",
+                description: "致鏡頭後的補光者",
+                embedUrl: "https://www.youtube.com/embed/i9ZdTCmwYio"
+            },
+			{
+                id: "V006",
+                title: "WLM樂團:因為音樂，我們相遇",
+                description: "一群因讀書會而相遇的人，在人生不同階段重新擁抱音樂。我們用歌聲陪伴彼此，也將溫暖帶到更多地方。這是屬於 WLM 樂團一路走來的點點滴滴與珍過回憶。",
+                embedUrl: "https://www.youtube.com/embed/uEaM2oLRJTg"
+            },
+			{
+                id: "V007",
+                title: "財務組這一年的時光剪影",
+                description: "財務組的講座、小團、迎新及組聚活動點滴",
+                embedUrl: "https://www.youtube.com/embed/saZW1tcVV14"
+            },
+			{
+                id: "V008",
+                title: "仙草節的紫色浪漫",
+                description: "公關組的仙草節組聚影片",
+                embedUrl: "https://www.youtube.com/embed/2aWiQdnep_w"
+            }
+        ];
+
+        // 2. 渲染網頁畫面的函式
+        function renderVideos() {
+            const container = document.getElementById('videoContainer');
+            container.innerHTML = ''; 
+
+            videoData.forEach((video) => {
+                const card = document.createElement('div');
+                card.className = 'video-card';
+                
+                card.innerHTML = `
+                    <div class="video-id-badge">編號: ${video.id}</div>
+                    
+                    <div class="video-iframe-wrapper">
+                        <iframe src="${video.embedUrl}" allowfullscreen></iframe>
+                    </div>
+                    
+                    <div class="video-info">
+                        <div>
+                            <div class="video-title">${video.title}</div>
+                            <div class="video-description">${video.description}</div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 3. 執行初始渲染
+        renderVideos();
+    </script>
+</body>
+</html>
